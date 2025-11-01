@@ -9,9 +9,9 @@
 	"description": "",
 	"devDependencies": {
 		"@eslint/js": "^9.21.0",
-		"@onlishop-ag/admin-eslint-rules": "^1.0.2",
-		"@onlishop-ag/admin-stylelint-rules": "^1.0.2",
-		"@onlishop-ag/storefront-eslint-rules": "^1.0.2",
+		"@onlishop/admin-eslint-rules": "^1.0.2",
+		"@onlishop/admin-stylelint-rules": "^1.0.2",
+		"@onlishop/storefront-eslint-rules": "^1.0.2",
 		"eslint": "^9.30.1",
 		"eslint-config-prettier": "^10.0.1",
 		"eslint-plugin-inclusive-language": "^2.2.1",

@@ -2,7 +2,7 @@
 export default {
 	extends: ["stylelint-config-recommended-scss"],
 	customSyntax: "postcss-scss",
-	plugins: ["stylelint-scss", "@onlishop-ag/admin-stylelint-rules"],
+	plugins: ["stylelint-scss", "@onlishop/admin-stylelint-rules"],
 	rules: {
 		"selector-class-pattern": null,
 		"import-notation": null,

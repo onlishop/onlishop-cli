@@ -3,7 +3,7 @@ import pluginJs from "@eslint/js";
 import tseslint from "typescript-eslint";
 import pluginVue from "eslint-plugin-vue";
 import pluginVueA11y from "eslint-plugin-vuejs-accessibility";
-import adminRules from "@onlishop-ag/admin-eslint-rules";
+import adminRules from "@onlishop/admin-eslint-rules";
 import pluginInclusiveLanguage from "eslint-plugin-inclusive-language";
 import eslintConfigPrettier from "eslint-config-prettier";
 
