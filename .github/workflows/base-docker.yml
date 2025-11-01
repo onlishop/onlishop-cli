@@ -1,0 +1,58 @@
+name: Update Base Docker Image
+on:
+  workflow_dispatch:
+  push:
+    tags-ignore:
+      - "*"
+    branches:
+      - main
+    paths:
+      - 'Dockerfile.base'
+      - 'internal/verifier/js/**'
+      - 'internal/verifier/php/**'
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+
+jobs:
+  build:
+    name: Build PHP ${{ matrix.php-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-version: ["8.4", "8.3", "8.2", "8.1"]
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # ratchet:step-security/harden-runner@v2.13.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # ratchet:actions/checkout@v4
+
+      - name: Install and configure Namespace CLI
+        uses: namespacelabs/nscloud-setup@v0
+
+      - name: Configure Namespace powered Buildx
+        uses: namespacelabs/nscloud-setup-buildx-action@v0
+
+      - name: Login into Github Docker Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build and push
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # ratchet:docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          file: Dockerfile.base
+          platforms: linux/amd64,linux/arm64
+          tags: "ghcr.io/onlishop/onlishop-cli-base:${{ matrix.php-version }}"
+          build-args: |
+            PHP_VERSION=${{ matrix.php-version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
+        env:
+          DOCKER_BUILD_RECORD_UPLOAD: false
+          DOCKER_BUILD_SUMMARY: false

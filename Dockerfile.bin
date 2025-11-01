@@ -1,0 +1,6 @@
+FROM scratch
+ARG TARGETPLATFORM
+
+COPY $TARGETPLATFORM/onlishop-cli /
+ENTRYPOINT ["/onlishop-cli"]
+CMD ["--help"]

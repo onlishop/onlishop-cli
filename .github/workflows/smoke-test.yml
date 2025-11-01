@@ -1,0 +1,77 @@
+name: Smoke Test
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a
+        with:
+          egress-policy: audit
+
+      - name: Checkout Repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # ratchet:actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # ratchet:actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+          check-latest: true
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@bf6b4fbd49ca58e4608c9c89fba0b8d90bd2a39f # ratchet:shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: Compile onlishop-cli
+        run: go build
+
+      - name: Move to usr/bin
+        run: mv onlishop-cli /usr/local/bin/
+
+      - name: Checkout Plugin
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # ratchet:actions/checkout@v4
+        with:
+          repository: 'FriendsOfOnlishop/FroshTools'
+          ref: '75e2013752fd4db7535e4b72b3e3e8d57e531002'
+          path: 'plugin'
+
+      - name: Create Onlishop
+        run: onlishop-cli project create onlishop 6.5.7.3
+
+      - name: Build asset of Plugin
+        run: onlishop-cli extension zip plugin
+
+      - name: Build asset of Plugin without Git
+        run: onlishop-cli extension zip plugin --disable-git --release
+
+      - name: Validate Plugin
+        run: onlishop-cli extension validate FroshTools.zip
+
+      - name: Get Changelog
+        run: onlishop-cli extension get-changelog FroshTools.zip
+
+      - name: Build asset against custom PROJECT_ROOT
+        env:
+          ONLISHOP_PROJECT_ROOT: ${{ github.workspace }}/onlishop
+        run: |
+          mv plugin/.onlishop-extension.yml plugin/.onlishop-extension-disable.yml
+          onlishop-cli extension build plugin
+          mv plugin/.onlishop-extension-disable.yml plugin/.onlishop-extension.yml
+
+      - name: Install a Storefront Plugin
+        working-directory: onlishop
+        run: |
+          composer require 'frosh/platform-filter-search:*' --no-interaction --no-scripts
+          rm -rf vendor
+
+      - name: Setup the project
+        uses: onlishopLabs/build-project-action@main
+        with:
+          path: onlishop

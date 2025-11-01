@@ -1,0 +1,25 @@
+/.idea
+/.fleet
+/onlishop-cli*
+dist/
+/completions
+/local
+/.onlishop-cli
+/.onlishop-project.yml
+/.onlishop-project.yaml
+/test-app
+/go-onlishop-admin-api-sdk
+/*.zip
+/Frosh*
+/Swag*
+/result
+/project
+dump.sql*
+
+/testdata
+
+# Devenv
+.devenv*
+devenv.local.nix
+
+/.direnv
