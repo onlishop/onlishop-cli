@@ -373,11 +373,6 @@ func validatePHPFiles(c context.Context, ext Extension, check validation.Check) 
 		return
 	}
 
-	if phpVersion == "7.2" {
-		phpVersion = "7.3"
-		logging.FromContext(c).Infof("PHP 7.2 is not supported for PHP linting, using 7.3 now")
-	}
-
 	for _, val := range ext.GetSourceDirs() {
 		phpErrors, err := phplint.LintFolder(c, phpVersion, val)
 

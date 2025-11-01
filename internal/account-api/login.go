@@ -11,7 +11,7 @@ import (
 	"github.com/onlishop/onlishop-cli/logging"
 )
 
-const ApiUrl = "https://api.onlishop.com"
+const ApiUrl = "https://api.onlishop6.com"
 
 type AccountConfig interface {
 	GetAccountEmail() string
