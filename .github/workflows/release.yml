@@ -52,13 +52,6 @@ jobs:
       - name: Install Syft
         uses: anchore/sbom-action/download-syft@f8bdd1d8ac5e901a77a92f111440fdb1b593736b # ratchet:anchore/sbom-action/download-syft@v0.20.6
 
-      - name: Gather NUR Token
-        uses: octo-sts/action@a26b0c6455c7f13316f29a8766287f939e75f6c8 # ratchet:octo-sts/action@v1.0.2
-        id: sts-nur
-        with:
-          scope: FriendsOfOnlishop/nur-packages
-          identity: release
-
       - name: Update npm
         run: npm install -g npm@latest
 
