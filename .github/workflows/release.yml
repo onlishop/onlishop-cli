@@ -52,13 +52,6 @@ jobs:
       - name: Install Syft
         uses: anchore/sbom-action/download-syft@f8bdd1d8ac5e901a77a92f111440fdb1b593736b # ratchet:anchore/sbom-action/download-syft@v0.20.6
 
-      - name: Gather Homebrew Token
-        uses: octo-sts/action@a26b0c6455c7f13316f29a8766287f939e75f6c8 # ratchet:octo-sts/action@v1.0.2
-        id: sts-onlishop
-        with:
-          scope: onlishop/homebrew-tap
-          identity: swcli
-
       - name: Gather NUR Token
         uses: octo-sts/action@a26b0c6455c7f13316f29a8766287f939e75f6c8 # ratchet:octo-sts/action@v1.0.2
         id: sts-nur
@@ -73,41 +66,13 @@ jobs:
         run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
 
       - name: Login into Github Docker Registery
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        run: echo "${{ secrets.TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # ratchet:goreleaser/goreleaser-action@v6
         with:
-          distribution: goreleaser-pro
+          distribution: goreleaser
           version: '~> v2'
           args: release --clean
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          HOMEBREW_TAP_GITHUB_TOKEN_ONLISHOP: ${{ steps.sts-onlishop.outputs.token }}
-          NUR_GITHUB_TOKEN: ${{ steps.sts-nur.outputs.token }}
-          AUR_KEY: ${{ secrets.AUR_KEY }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
-          # Code Signing
-          APPLE_CODE_SIGNING_KEY: ${{ secrets.APPLE_CODE_SIGNING_KEY }}
-          APPLE_CODE_SIGNING_KEY_PASSWORD: ${{ secrets.APPLE_CODE_SIGNING_KEY_PASSWORD }}
-          APPLE_APP_STORE_CONNECT_ISSUER: ${{ secrets.APPLE_APP_STORE_CONNECT_ISSUER }}
-          APPLE_APP_STORE_CONNECT_KEY_ID: ${{ secrets.APPLE_APP_STORE_CONNECT_KEY_ID }}
-          APPLE_APP_STORE_CONNECT_KEY: ${{ secrets.APPLE_APP_STORE_CONNECT_KEY }}
-
-      - name: Install Cloudsmith CLI
-        run: pip install --upgrade cloudsmith-cli
-
-      - name: Cloudsmith Uploads
-        env:
-          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-        run: |
-          for filename in dist/*.deb; do
-              cloudsmith push deb friendsofonlishop/stable/any-distro/any-version $filename
-          done
-          for filename in dist/*.rpm; do
-              cloudsmith push rpm friendsofonlishop/stable/any-distro/any-version $filename
-          done
-          for filename in dist/*.apk; do
-              cloudsmith push alpine friendsofonlishop/stable/alpine/any-version $filename
-          done
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
