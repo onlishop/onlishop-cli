@@ -180,7 +180,7 @@ func fillAuthStruct(auth *ComposerAuth) *ComposerAuth {
 	}
 
 	if composerToken != "" {
-		auth.BearerAuth["packages.onlishop.com"] = composerToken
+		auth.BearerAuth["packages.onlishop6.com"] = composerToken
 	}
 
 	return auth

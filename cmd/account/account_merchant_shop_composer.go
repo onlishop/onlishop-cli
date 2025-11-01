@@ -68,10 +68,10 @@ var accountCompanyMerchantShopComposerCmd = &cobra.Command{
 				return err
 			}
 
-			if !composerJson.Repositories.HasRepository("https://packages.onlishop.com") {
+			if !composerJson.Repositories.HasRepository("https://packages.onlishop6.com") {
 				composerJson.Repositories = append(composerJson.Repositories, packagist.ComposerJsonRepository{
 					Type: "composer",
-					URL:  "https://packages.onlishop.com",
+					URL:  "https://packages.onlishop6.com",
 				})
 			}
 
@@ -84,7 +84,7 @@ var accountCompanyMerchantShopComposerCmd = &cobra.Command{
 				return err
 			}
 
-			composerAuth.BearerAuth["packages.onlishop.com"] = token
+			composerAuth.BearerAuth["packages.onlishop6.com"] = token
 
 			if err := composerAuth.Save(); err != nil {
 				return err
