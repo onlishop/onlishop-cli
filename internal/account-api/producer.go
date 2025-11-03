@@ -8,136 +8,53 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-
-	"github.com/gorilla/schema"
 )
 
 type ProducerEndpoint struct {
-	c          *Client
-	producerId int
+	c *Client
 }
 
-func (e ProducerEndpoint) GetId() int {
-	return e.producerId
+func (c *Client) Producer() (*ProducerEndpoint, error) {
+	return &ProducerEndpoint{c: c}, nil
 }
 
-func (c *Client) Producer(ctx context.Context) (*ProducerEndpoint, error) {
-	r, err := c.NewAuthenticatedRequest(ctx, "GET", fmt.Sprintf("%s/companies/%d/allocations", ApiUrl, c.GetActiveCompanyID()), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	body, err := c.doRequest(r)
-	if err != nil {
-		return nil, err
-	}
-
-	var allocation companyAllocation
-	if err := json.Unmarshal(body, &allocation); err != nil {
-		return nil, fmt.Errorf("producer.profile: %v", err)
-	}
-
-	if !allocation.IsProducer {
-		return nil, fmt.Errorf("this company is not unlocked as producer")
-	}
-
-	return &ProducerEndpoint{producerId: allocation.ProducerID, c: c}, nil
+type Query struct {
+	Type  string      `json:"type"`
+	Field string      `json:"field"`
+	Value interface{} `json:"value"`
 }
-
-type companyAllocation struct {
-	HasShops          bool `json:"hasShops"`
-	HasCommercialShop bool `json:"hasCommercialShop"`
-	IsEducationMember bool `json:"isEducationMember"`
-	IsPartner         bool `json:"isPartner"`
-	IsProducer        bool `json:"isProducer"`
-	ProducerID        int  `json:"producerId"`
-}
-
-func (e ProducerEndpoint) Profile(ctx context.Context) (*Producer, error) {
-	r, err := e.c.NewAuthenticatedRequest(ctx, "GET", fmt.Sprintf("%s/producers?companyId=%d", ApiUrl, e.c.GetActiveCompanyID()), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	body, err := e.c.doRequest(r)
-	if err != nil {
-		return nil, err
-	}
-
-	var producers []Producer
-	if err := json.Unmarshal(body, &producers); err != nil {
-		return nil, fmt.Errorf("my_profile: %v", err)
-	}
-
-	for _, profile := range producers {
-		return &profile, nil
-	}
-
-	return nil, fmt.Errorf("cannot find a profile")
-}
-
-type Producer struct {
-	Id       int    `json:"id"`
-	Prefix   string `json:"prefix"`
-	Contract struct {
-		Id   int    `json:"id"`
-		Path string `json:"path"`
-	} `json:"contract"`
-	Name    string `json:"name"`
-	Details []struct {
-		Id     int `json:"id"`
-		Locale struct {
-			Id   int    `json:"id"`
-			Name string `json:"name"`
-		} `json:"locale"`
-		Description string `json:"description"`
-	} `json:"details"`
-	Website              string `json:"website"`
-	Fixed                bool   `json:"fixed"`
-	HasCancelledContract bool   `json:"hasCancelledContract"`
-	IconPath             string `json:"iconPath"`
-	IconIsSet            bool   `json:"iconIsSet"`
-	OnlishopID           string `json:"onlishopId"`
-	UserId               int    `json:"userId"`
-	CompanyId            int    `json:"companyId"`
-	CompanyName          string `json:"companyName"`
-	SaleMail             string `json:"saleMail"`
-	SupportMail          string `json:"supportMail"`
-	RatingMail           string `json:"ratingMail"`
-	SupportedLanguages   []struct {
-		Id          int    `json:"id"`
-		Name        string `json:"name"`
-		Description string `json:"description"`
-	} `json:"supportedLanguages"`
-	IconURL                   string      `json:"iconUrl"`
-	CancelledContract         interface{} `json:"cancelledContract"`
-	HasSupportInfoActivated   bool        `json:"hasSupportInfoActivated"`
-	IsPremiumExtensionPartner bool        `json:"isPremiumExtensionPartner"`
-}
-
 type ListExtensionCriteria struct {
 	Limit         int    `schema:"limit,omitempty"`
 	Offset        int    `schema:"offset,omitempty"`
 	OrderBy       string `schema:"orderBy,omitempty"`
 	OrderSequence string `schema:"orderSequence,omitempty"`
-	Search        string `schema:"search,omitempty"`
+	Query         *Query `json:"query,omitempty"`
 }
 
 func (e ProducerEndpoint) Extensions(ctx context.Context, criteria *ListExtensionCriteria) ([]Extension, error) {
-	encoder := schema.NewEncoder()
 	form := url.Values{}
-	form.Set("producerId", strconv.FormatInt(int64(e.GetId()), 10))
-	err := encoder.Encode(criteria, form)
-	if err != nil {
-		return nil, fmt.Errorf("list_extensions: %v", err)
+
+	if criteria.Limit != 0 {
+		form.Set("limit", strconv.Itoa(criteria.Limit))
+	}
+	if criteria.Offset != 0 {
+		form.Set("offset", strconv.Itoa(criteria.Offset))
+	}
+	if criteria.OrderBy != "" {
+		form.Set("orderBy", criteria.OrderBy)
+	}
+	if criteria.OrderSequence != "" {
+		form.Set("orderSequence", criteria.OrderSequence)
 	}
 
 	r, err := e.c.NewAuthenticatedRequest(ctx, "GET", fmt.Sprintf("%s/plugins?%s", ApiUrl, form.Encode()), nil)
+
 	if err != nil {
 		return nil, err
 	}
 
 	body, err := e.c.doRequest(r)
+
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +69,11 @@ func (e ProducerEndpoint) Extensions(ctx context.Context, criteria *ListExtensio
 
 func (e ProducerEndpoint) GetExtensionByName(ctx context.Context, name string) (*Extension, error) {
 	criteria := ListExtensionCriteria{
-		Search: name,
+		Query: &Query{
+			Type:  "equals",
+			Field: "productNumber",
+			Value: name,
+		},
 	}
 
 	extensions, err := e.Extensions(ctx, &criteria)
@@ -169,11 +90,11 @@ func (e ProducerEndpoint) GetExtensionByName(ctx context.Context, name string) (
 	return nil, fmt.Errorf("cannot find Extension by name %s", name)
 }
 
-func (e ProducerEndpoint) GetExtensionById(ctx context.Context, id int) (*Extension, error) {
+func (e ProducerEndpoint) GetExtensionById(ctx context.Context, id string) (*Extension, error) {
 	errorFormat := "GetExtensionById: %v"
 
 	// Create it
-	r, err := e.c.NewAuthenticatedRequest(ctx, "GET", fmt.Sprintf("%s/plugins/%d", ApiUrl, id), nil)
+	r, err := e.c.NewAuthenticatedRequest(ctx, "GET", fmt.Sprintf("%s/plugins/%s", ApiUrl, id), nil)
 	if err != nil {
 		return nil, fmt.Errorf(errorFormat, err)
 	}
@@ -192,106 +113,16 @@ func (e ProducerEndpoint) GetExtensionById(ctx context.Context, id int) (*Extens
 }
 
 type Extension struct {
-	Id       int `json:"id"`
-	Producer struct {
-		Id       int    `json:"id"`
-		Prefix   string `json:"prefix"`
-		Contract struct {
-			Id                                int     `json:"id"`
-			BaseProvisionInPercent            float64 `json:"baseProvisionInPercent"`
-			InAppProvisionForAppsInPercent    float64 `json:"inAppProvisionForAppsInPercent"`
-			InAppProvisionForPluginsInPercent float64 `json:"inAppProvisionForPluginsInPercent"`
-			ApplicationDate                   int     `json:"applicationDate"`
-			ConfirmationDate                  int     `json:"confirmationDate"`
-			SdkLicense                        bool    `json:"sdkLicense"`
-			OnlishopApproved                  bool    `json:"onlishopApproved"`
-			ProducerApproved                  bool    `json:"producerApproved"`
-			SignedDocument                    struct {
-				Id   int `json:"id"`
-				Type struct {
-					Id          int    `json:"id"`
-					Name        string `json:"name"`
-					Description string `json:"description"`
-				} `json:"type"`
-				Version string `json:"version"`
-				Texts   []struct {
-					Id           int    `json:"id"`
-					Locale       Locale `json:"locale"`
-					Text         string `json:"text"`
-					ChangeNotice string `json:"changeNotice"`
-				} `json:"texts"`
-				CreationDate     string `json:"creationDate"`
-				LastChangeDate   string `json:"lastChangeDate"`
-				IsCurrentVersion bool   `json:"isCurrentVersion"`
-			} `json:"signedDocument"`
-			FirstSignatureDate string `json:"firstSignatureDate"`
-		} `json:"contract"`
-		Name    string `json:"name"`
-		Details []struct {
-			Id     int `json:"id"`
-			Locale struct {
-				Id   int    `json:"id"`
-				Name string `json:"name"`
-			} `json:"locale"`
-			Description string      `json:"description"`
-			WebsiteGtc  string      `json:"websiteGtc"`
-			SupportInfo interface{} `json:"supportInfo"`
-		} `json:"details"`
-		Website              string `json:"website"`
-		Fixed                bool   `json:"fixed"`
-		HasCancelledContract bool   `json:"hasCancelledContract"`
-		IconPath             string `json:"iconPath"`
-		IconIsSet            bool   `json:"iconIsSet"`
-		UserId               int    `json:"userId"`
-		CompanyId            int    `json:"companyId"`
-		CompanyName          string `json:"companyName"`
-		SaleMail             string `json:"saleMail"`
-		SupportMail          string `json:"supportMail"`
-		RatingMail           string `json:"ratingMail"`
-		SupportedLanguages   []struct {
-			Id   int    `json:"id"`
-			Name string `json:"name"`
-		} `json:"supportedLanguages"`
-		HasSupportInfoActivated   bool        `json:"hasSupportInfoActivated"`
-		IconURL                   string      `json:"iconUrl"`
-		CancelledContract         interface{} `json:"cancelledContract"`
-		IsPremiumExtensionPartner bool        `json:"isPremiumExtensionPartner"`
-	} `json:"producer"`
-	Type struct {
-		Id          int    `json:"id"`
-		Name        string `json:"name"`
-		Description string `json:"description"`
-	} `json:"type"`
-	Name            string `json:"name"`
-	Code            string `json:"code"`
-	ModuleKey       string `json:"moduleKey"`
-	LifecycleStatus struct {
-		Id          int    `json:"id"`
-		Name        string `json:"name"`
-		Description string `json:"description"`
-	} `json:"lifecycleStatus"`
-	Generation struct {
+	Id            string `json:"id"`
+	Name          string `json:"name"`
+	ProductNumber string `json:"productNumber"`
+	Generation    struct {
 		Id          int    `json:"id"`
 		Name        string `json:"name"`
 		Description string `json:"description"`
 	} `json:"generation"`
-	ActivationStatus struct {
-		Id          int    `json:"id"`
-		Name        string `json:"name"`
-		Description string `json:"description"`
-	} `json:"activationStatus"`
-	ApprovalStatus struct {
-		Id          int    `json:"id"`
-		Name        string `json:"name"`
-		Description string `json:"description"`
-	} `json:"approvalStatus"`
-	StandardLocale Locale `json:"standardLocale"`
-	License        struct {
-		Id          int    `json:"id"`
-		Name        string `json:"name"`
-		Description string `json:"description"`
-	} `json:"license"`
-	Infos []*struct {
+	StandardLocale string `json:"standardLocale"`
+	Infos          []*struct {
 		Id                 int          `json:"id"`
 		Locale             Locale       `json:"locale"`
 		Name               string       `json:"name"`
@@ -307,64 +138,19 @@ type Extension struct {
 		Faqs               []StoreFaq   `json:"faqs"`
 		SupportInfo        interface{}  `json:"supportInfo"`
 	} `json:"infos"`
-	PriceModels         []interface{}      `json:"priceModels"`
-	Variants            []interface{}      `json:"variants"`
-	StoreAvailabilities []StoreAvailablity `json:"storeAvailabilities"`
-	Categories          []StoreCategory    `json:"categories"`
-	Category            *StoreCategory     `json:"selectedFutureCategory"`
-	Addons              []struct {
-		Id             int    `json:"id"`
-		Name           string `json:"name"`
-		Description    string `json:"description"`
-		AddedProvision int    `json:"addedProvision"`
-		Public         bool   `json:"public"`
-	} `json:"addons"`
-	LastChange                          string            `json:"lastChange"`
-	CreationDate                        string            `json:"creationDate"`
-	Support                             bool              `json:"support"`
-	SupportOnlyCommercial               bool              `json:"supportOnlyCommercial"`
-	IconPath                            string            `json:"iconPath"`
-	IconIsSet                           bool              `json:"iconIsSet"`
-	ExamplePageUrl                      string            `json:"examplePageUrl"`
-	Demos                               []interface{}     `json:"demos"`
-	Localizations                       []Locale          `json:"localizations"`
-	LatestBinary                        interface{}       `json:"latestBinary"`
-	MigrationSupport                    bool              `json:"migrationSupport"`
-	AutomaticBugfixVersionCompatibility bool              `json:"automaticBugfixVersionCompatibility"`
-	HiddenInStore                       bool              `json:"hiddenInStore"`
-	Certification                       interface{}       `json:"certification"`
-	ProductType                         *StoreProductType `json:"productType"`
+	StoreAvailabilities                 []StoreAvailablity `json:"storeAvailabilities"`
+	Categories                          []StoreCategory    `json:"categories"`
+	Category                            *StoreCategory     `json:"selectedFutureCategory"`
+	Localizations                       []Locale           `json:"localizations"`
+	LatestBinary                        interface{}        `json:"latestBinary"`
+	AutomaticBugfixVersionCompatibility bool               `json:"automaticBugfixVersionCompatibility"`
+	ProductType                         *StoreProductType  `json:"productType"`
 	Status                              struct {
 		Name string `json:"name"`
 	} `json:"status"`
-	MinimumMarketingSoftwareVersion       interface{}   `json:"minimumMarketingSoftwareVersion"`
-	IsSubscriptionEnabled                 bool          `json:"isSubscriptionEnabled"`
-	ReleaseDate                           interface{}   `json:"releaseDate"`
-	PlannedReleaseDate                    interface{}   `json:"plannedReleaseDate"`
-	LastBusinessModelChangeDate           string        `json:"lastBusinessModelChangeDate"`
-	IsSW5Compatible                       bool          `json:"isSW5Compatible"`
-	Subprocessors                         interface{}   `json:"subprocessors"`
-	PluginTestingInstanceDisabled         bool          `json:"pluginTestingInstanceDisabled"`
-	IconURL                               string        `json:"iconUrl"`
-	Pictures                              string        `json:"pictures"`
-	HasPictures                           bool          `json:"hasPictures"`
-	Comments                              string        `json:"comments"`
-	Reviews                               string        `json:"reviews"`
-	IsPremiumPlugin                       bool          `json:"isPremiumPlugin"`
-	IsAdvancedFeature                     bool          `json:"isAdvancedFeature"`
-	IsEnterpriseAccelerator               bool          `json:"isEnterpriseAccelerator"`
-	IsSW6EnterpriseFeature                bool          `json:"isSW6EnterpriseFeature"`
-	IsSW6ProfessionalEditionFeature       bool          `json:"isSW6ProfessionalEditionFeature"`
-	Binaries                              interface{}   `json:"binaries"`
-	Predecessor                           interface{}   `json:"predecessor"`
-	Successor                             interface{}   `json:"successor"`
-	IsCompatibleWithLatestOnlishopVersion bool          `json:"isCompatibleWithLatestOnlishopVersion"`
-	PluginPreview                         interface{}   `json:"pluginPreview"`
-	IsNoLongerAvailableForDownload        bool          `json:"isNoLongerAvailableForDownload"`
-	AddonsLog                             []interface{} `json:"addonsLog"`
-	HasPurchasableInAppFeatures           bool          `json:"hasPurchasableInAppFeatures"`
-	ActiveShowcase                        bool          `json:"activeShowcase"`
-	CancellationOffers                    []interface{} `json:"cancellationOffers"`
+	ReleaseDate                           interface{} `json:"releaseDate"`
+	IconURL                               string      `json:"iconUrl"`
+	IsCompatibleWithLatestOnlishopVersion bool        `json:"isCompatibleWithLatestOnlishopVersion"`
 }
 
 type CreateExtensionRequest struct {
@@ -382,7 +168,7 @@ func (e ProducerEndpoint) UpdateExtension(ctx context.Context, extension *Extens
 	}
 
 	// Patch the name
-	r, err := e.c.NewAuthenticatedRequest(ctx, "PUT", fmt.Sprintf("%s/plugins/%d", ApiUrl, extension.Id), bytes.NewBuffer(requestBody))
+	r, err := e.c.NewAuthenticatedRequest(ctx, "PUT", fmt.Sprintf("%s/plugins/%s", ApiUrl, extension.Id), bytes.NewBuffer(requestBody))
 	if err != nil {
 		return err
 	}
@@ -425,28 +211,15 @@ type SoftwareVersion struct {
 }
 
 type Locale struct {
-	Id   int    `json:"id"`
 	Name string `json:"name"`
 }
 
 type StoreAvailablity struct {
-	Id          int    `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name string `json:"name"`
 }
 
 type StoreCategory struct {
-	Id          int         `json:"id"`
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	Parent      interface{} `json:"parent"`
-	Position    int         `json:"position"`
-	Public      bool        `json:"public"`
-	Visible     bool        `json:"visible"`
-	Suggested   bool        `json:"suggested"`
-	Applicable  bool        `json:"applicable"`
-	Details     interface{} `json:"details"`
-	Active      bool        `json:"active"`
+	Name string `json:"name"`
 }
 
 type StoreTag struct {
@@ -458,9 +231,7 @@ type StoreVideo struct {
 }
 
 type StoreProductType struct {
-	Id          int    `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name string `json:"name"`
 }
 
 type StoreFaq struct {
@@ -470,47 +241,10 @@ type StoreFaq struct {
 }
 
 type ExtensionGeneralInformation struct {
-	Categories       []StoreCategory `json:"categories"`
-	FutureCategories []StoreCategory `json:"futureCategories"`
-	Addons           interface{}     `json:"addons"`
-	Generations      []struct {
-		Id          int    `json:"id"`
-		Name        string `json:"name"`
-		Description string `json:"description"`
-	} `json:"generations"`
-	ActivationStatus []struct {
-		Id          int    `json:"id"`
-		Name        string `json:"name"`
-		Description string `json:"description"`
-	} `json:"activationStatus"`
-	ApprovalStatus []struct {
-		Id          int    `json:"id"`
-		Name        string `json:"name"`
-		Description string `json:"description"`
-	} `json:"approvalStatus"`
-	LifecycleStatus []struct {
-		Id          int    `json:"id"`
-		Name        string `json:"name"`
-		Description string `json:"description"`
-	} `json:"lifecycleStatus"`
-	BinaryStatus []struct {
-		Id          int    `json:"id"`
-		Name        string `json:"name"`
-		Description string `json:"description"`
-	} `json:"binaryStatus"`
-	Locales  []Locale `json:"locales"`
-	Licenses []struct {
-		Id          int    `json:"id"`
-		Name        string `json:"name"`
-		Description string `json:"description"`
-	} `json:"licenses"`
-	StoreAvailabilities  []StoreAvailablity  `json:"storeAvailabilities"`
-	PriceModels          []interface{}       `json:"priceModels"`
-	SoftwareVersions     SoftwareVersionList `json:"softwareVersions"`
-	DemoTypes            interface{}         `json:"demoTypes"`
-	Localizations        []Locale            `json:"localizations"`
-	ProductTypes         []StoreProductType  `json:"productTypes"`
-	ReleaseRequestStatus interface{}         `json:"releaseRequestStatus"`
+	FutureCategories    []StoreCategory    `json:"futureCategories"`
+	Locales             []string           `json:"locales"`
+	StoreAvailabilities []StoreAvailablity `json:"storeAvailabilities"`
+	ProductTypes        []StoreProductType `json:"productTypes"`
 }
 
 func (e ProducerEndpoint) GetExtensionGeneralInfo(ctx context.Context) (*ExtensionGeneralInformation, error) {

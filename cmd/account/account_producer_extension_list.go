@@ -3,7 +3,6 @@ package account
 import (
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/spf13/cobra"
 
@@ -15,7 +14,7 @@ var accountCompanyProducerExtensionListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "Lists all your extensions",
 	RunE: func(cmd *cobra.Command, _ []string) error {
-		p, err := services.AccountClient.Producer(cmd.Context())
+		p, err := services.AccountClient.Producer()
 		if err != nil {
 			return fmt.Errorf("cannot get producer endpoint: %w", err)
 		}
@@ -25,9 +24,13 @@ var accountCompanyProducerExtensionListCmd = &cobra.Command{
 		}
 
 		if len(listExtensionSearch) > 0 {
-			criteria.Search = listExtensionSearch
-			criteria.OrderBy = "name"
-			criteria.OrderSequence = "asc"
+			criteria.Query = &account_api.Query{
+				Type:  "equals",
+				Field: "productNumber",
+				Value: listExtensionSearch,
+			}
+			criteria.OrderBy = "created_at"
+			criteria.OrderSequence = "desc"
 		}
 
 		extensions, err := p.Extensions(cmd.Context(), &criteria)
@@ -50,7 +53,7 @@ var accountCompanyProducerExtensionListCmd = &cobra.Command{
 			}
 
 			_ = table.Append([]string{
-				strconv.FormatInt(int64(extension.Id), 10),
+				extension.Id,
 				extension.Name,
 				extension.Generation.Description,
 				compatible,

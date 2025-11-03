@@ -169,11 +169,11 @@ func (p OnlishopBundle) GetIconPath() string {
 func (p OnlishopBundle) GetMetaData() *extensionMetadata {
 	return &extensionMetadata{
 		Label: extensionTranslated{
-			German:  "FALLBACK",
+			Chinese: "FALLBACK",
 			English: "FALLBACK",
 		},
 		Description: extensionTranslated{
-			German:  "FALLBACK",
+			Chinese: "FALLBACK",
 			English: "FALLBACK",
 		},
 	}

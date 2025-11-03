@@ -38,7 +38,7 @@ var accountCompanyProducerExtensionInfoPullCmd = &cobra.Command{
 			return fmt.Errorf("cannot get extension name: %w", err)
 		}
 
-		p, err := services.AccountClient.Producer(cmd.Context())
+		p, err := services.AccountClient.Producer()
 		if err != nil {
 			return fmt.Errorf("cannot get producer endpoint: %w", err)
 		}
@@ -52,13 +52,13 @@ var accountCompanyProducerExtensionInfoPullCmd = &cobra.Command{
 		categoryList := make([]string, 0)
 		availabilities := make([]string, 0)
 		localizations := make([]string, 0)
-		tagsDE := make([]string, 0)
+		tagsZH := make([]string, 0)
 		tagsEN := make([]string, 0)
-		videosDE := make([]string, 0)
+		videosZH := make([]string, 0)
 		videosEN := make([]string, 0)
-		highlightsDE := make([]string, 0)
+		highlightsZH := make([]string, 0)
 		highlightsEN := make([]string, 0)
-		featuresDE := make([]string, 0)
+		featuresZH := make([]string, 0)
 		featuresEN := make([]string, 0)
 		faqDE := make([]extension.ConfigStoreFaq, 0)
 		faqEN := make([]extension.ConfigStoreFaq, 0)
@@ -142,18 +142,18 @@ var accountCompanyProducerExtensionInfoPullCmd = &cobra.Command{
 				}
 
 				for _, element := range info.Tags {
-					tagsDE = append(tagsDE, element.Name)
+					tagsZH = append(tagsZH, element.Name)
 				}
 
 				for _, element := range info.Videos {
-					videosDE = append(videosDE, element.URL)
+					videosZH = append(videosZH, element.URL)
 				}
 
 				if info.Highlights != "" {
-					highlightsDE = append(highlightsDE, strings.Split(info.Highlights, "\n")...)
+					highlightsZH = append(highlightsZH, strings.Split(info.Highlights, "\n")...)
 				}
 				if info.Features != "" {
-					featuresDE = append(featuresDE, strings.Split(info.Features, "\n")...)
+					featuresZH = append(featuresZH, strings.Split(info.Features, "\n")...)
 				}
 
 				for _, element := range info.Faqs {
@@ -204,7 +204,7 @@ var accountCompanyProducerExtensionInfoPullCmd = &cobra.Command{
 		newCfg := zipExt.GetExtensionConfig()
 
 		newCfg.Store.Icon = iconConfigPath
-		newCfg.Store.DefaultLocale = &storeExt.StandardLocale.Name
+		newCfg.Store.DefaultLocale = &storeExt.StandardLocale
 		newCfg.Store.Type = &extType
 		newCfg.Store.AutomaticBugfixVersionCompatibility = &storeExt.AutomaticBugfixVersionCompatibility
 		newCfg.Store.Availabilities = &availabilities
@@ -212,10 +212,10 @@ var accountCompanyProducerExtensionInfoPullCmd = &cobra.Command{
 		newCfg.Store.Description = extension.ConfigTranslated[string]{German: &germanDescription, English: &englishDescription}
 		newCfg.Store.InstallationManual = extension.ConfigTranslated[string]{German: &germanInstallationManual, English: &englishInstallationManual}
 		newCfg.Store.Categories = &categoryList
-		newCfg.Store.Tags = extension.ConfigTranslated[[]string]{German: &tagsDE, English: &tagsEN}
-		newCfg.Store.Videos = extension.ConfigTranslated[[]string]{German: &videosDE, English: &videosEN}
-		newCfg.Store.Highlights = extension.ConfigTranslated[[]string]{German: &highlightsDE, English: &highlightsEN}
-		newCfg.Store.Features = extension.ConfigTranslated[[]string]{German: &featuresDE, English: &featuresEN}
+		newCfg.Store.Tags = extension.ConfigTranslated[[]string]{German: &tagsZH, English: &tagsEN}
+		newCfg.Store.Videos = extension.ConfigTranslated[[]string]{German: &videosZH, English: &videosEN}
+		newCfg.Store.Highlights = extension.ConfigTranslated[[]string]{German: &highlightsZH, English: &highlightsEN}
+		newCfg.Store.Features = extension.ConfigTranslated[[]string]{German: &featuresZH, English: &featuresEN}
 		newCfg.Store.Faq = extension.ConfigTranslated[[]extension.ConfigStoreFaq]{German: &faqDE, English: &faqEN}
 		newCfg.Store.MetaTitle = extension.ConfigTranslated[string]{German: &germanMetaTitle, English: &englishMetaTitle}
 		newCfg.Store.MetaDescription = extension.ConfigTranslated[string]{German: &germanMetaDescription, English: &englishMetaDescription}

@@ -25,7 +25,7 @@ var accountCompanyProducerExtensionUploadCmd = &cobra.Command{
 
 		logging.FromContext(cmd.Context()).Debugf("Starting upload process for file: %s", path)
 
-		p, err := services.AccountClient.Producer(cmd.Context())
+		p, err := services.AccountClient.Producer()
 		if err != nil {
 			logging.FromContext(cmd.Context()).Debugf("Failed to get producer client: %v", err)
 			return err
@@ -105,8 +105,8 @@ var accountCompanyProducerExtensionUploadCmd = &cobra.Command{
 				Version:          zipVersion.String(),
 				SoftwareVersions: avaiableVersions.FilterOnVersionStringList(constraint),
 				Changelogs: []account_api.ExtensionUpdateChangelog{
-					{Locale: "de_DE", Text: changelog.German},
-					{Locale: "en_GB", Text: changelog.English},
+					{Locale: "zh_CN", Text: changelog.Chinese},
+					{Locale: "en_US", Text: changelog.English},
 				},
 			}
 
@@ -127,8 +127,8 @@ var accountCompanyProducerExtensionUploadCmd = &cobra.Command{
 			Id:               foundBinary.Id,
 			SoftwareVersions: avaiableVersions.FilterOnVersionStringList(constraint),
 			Changelogs: []account_api.ExtensionUpdateChangelog{
-				{Locale: "de_DE", Text: changelog.German},
-				{Locale: "en_GB", Text: changelog.English},
+				{Locale: "zh_CN", Text: changelog.Chinese},
+				{Locale: "en_US", Text: changelog.English},
 			},
 		}
 

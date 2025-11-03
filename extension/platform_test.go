@@ -13,7 +13,7 @@ func getTestPlugin(tempDir string) PlatformPlugin {
 		path: tempDir,
 		config: &Config{
 			Store: ConfigStore{
-				Availabilities: &[]string{"German"},
+				Availabilities: &[]string{"Chinese"},
 			},
 		},
 		Composer: PlatformComposerJson{
