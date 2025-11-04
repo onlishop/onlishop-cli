@@ -113,10 +113,9 @@ func (e ProducerEndpoint) GetExtensionById(ctx context.Context, id string) (*Ext
 }
 
 type Extension struct {
-	Id            string `json:"id"`
-	Name          string `json:"name"`
-	ProductNumber string `json:"productNumber"`
-	Generation    struct {
+	Id         string `json:"id"`
+	Name       string `json:"name"`
+	Generation struct {
 		Id          int    `json:"id"`
 		Name        string `json:"name"`
 		Description string `json:"description"`
@@ -124,7 +123,7 @@ type Extension struct {
 	StandardLocale string `json:"standardLocale"`
 	Infos          []*struct {
 		Id                 int          `json:"id"`
-		Locale             Locale       `json:"locale"`
+		Locale             string       `json:"locale"`
 		Name               string       `json:"name"`
 		Description        string       `json:"description"`
 		InstallationManual string       `json:"installationManual"`
@@ -166,7 +165,7 @@ func (e ProducerEndpoint) UpdateExtension(ctx context.Context, extension *Extens
 	if err != nil {
 		return err
 	}
-
+	fmt.Println(string(requestBody))
 	// Patch the name
 	r, err := e.c.NewAuthenticatedRequest(ctx, "PUT", fmt.Sprintf("%s/plugins/%s", ApiUrl, extension.Id), bytes.NewBuffer(requestBody))
 	if err != nil {

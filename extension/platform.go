@@ -184,12 +184,12 @@ func (p PlatformPlugin) GetMetaData() *extensionMetadata {
 	return &extensionMetadata{
 		Name: p.Composer.Name,
 		Label: extensionTranslated{
-			Chinese: p.Composer.Extra.Label["de-DE"],
-			English: p.Composer.Extra.Label["en-GB"],
+			Chinese: p.Composer.Extra.Label["zh-CN"],
+			English: p.Composer.Extra.Label["en-US"],
 		},
 		Description: extensionTranslated{
-			Chinese: p.Composer.Extra.Description["de-DE"],
-			English: p.Composer.Extra.Description["en-GB"],
+			Chinese: p.Composer.Extra.Description["zh-CN"],
+			English: p.Composer.Extra.Description["en-US"],
 		},
 	}
 }
@@ -286,10 +286,10 @@ func (p PlatformPlugin) Validate(c context.Context, check validation.Check) {
 		}
 	}
 
-	requiredKeys := []string{"de-DE", "en-GB"}
+	requiredKeys := []string{"zh-CN", "en-US"}
 
 	if !p.GetExtensionConfig().Store.IsInGermanStore() {
-		requiredKeys = []string{"en-GB"}
+		requiredKeys = []string{"en-US"}
 	}
 
 	for _, key := range requiredKeys {

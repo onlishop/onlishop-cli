@@ -320,7 +320,7 @@ func (e ProducerEndpoint) AddExtensionImage(ctx context.Context, extensionId str
 		return nil, fmt.Errorf(errorFormat, err)
 	}
 
-	r, err := e.c.NewAuthenticatedRequest(ctx, "POST", fmt.Sprintf("%s/plugins/%d/pictures", ApiUrl, extensionId), &b)
+	r, err := e.c.NewAuthenticatedRequest(ctx, "POST", fmt.Sprintf("%s/plugins/%s/pictures", ApiUrl, extensionId), &b)
 	if err != nil {
 		return nil, fmt.Errorf(errorFormat, err)
 	}

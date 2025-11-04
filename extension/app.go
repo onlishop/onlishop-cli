@@ -137,16 +137,16 @@ func (a App) GetIconPath() string {
 }
 
 func (a App) GetMetaData() *extensionMetadata {
-	german := []string{"de-DE", "de"}
+	chinese := []string{"zh-CN", "zh"}
 	english := []string{"en-GB", "en-US", "en", ""}
 
 	return &extensionMetadata{
 		Label: extensionTranslated{
-			Chinese: a.manifest.Meta.Label.GetValueByLanguage(german),
+			Chinese: a.manifest.Meta.Label.GetValueByLanguage(chinese),
 			English: a.manifest.Meta.Label.GetValueByLanguage(english),
 		},
 		Description: extensionTranslated{
-			Chinese: a.manifest.Meta.Description.GetValueByLanguage(german),
+			Chinese: a.manifest.Meta.Description.GetValueByLanguage(chinese),
 			English: a.manifest.Meta.Description.GetValueByLanguage(english),
 		},
 	}

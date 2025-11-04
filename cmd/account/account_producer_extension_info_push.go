@@ -63,7 +63,7 @@ var accountCompanyProducerExtensionInfoPushCmd = &cobra.Command{
 		metadata := zipExt.GetMetaData()
 
 		for _, info := range storeExt.Infos {
-			language := info.Locale.Name[0:2]
+			language := info.Locale[0:2]
 
 			if language == "zh" {
 				info.Name = metadata.Label.Chinese
@@ -207,7 +207,7 @@ func updateStoreInfo(ext *accountApi.Extension, zipExt extension.Extension, cfg 
 	}
 
 	for _, info := range ext.Infos {
-		language := info.Locale.Name[0:2]
+		language := info.Locale[0:2]
 
 		storeTags := getTranslation(language, cfg.Store.Tags)
 		if storeTags != nil {
@@ -283,8 +283,8 @@ func updateStoreInfo(ext *accountApi.Extension, zipExt extension.Extension, cfg 
 
 func getTranslation[T extension.Translatable](language string, config extension.ConfigTranslated[T]) *T {
 	switch language {
-	case "de":
-		return config.German
+	case "zh":
+		return config.Chinese
 	case "en":
 		return config.English
 	}

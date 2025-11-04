@@ -130,7 +130,7 @@ type Translatable interface {
 }
 
 type ConfigTranslated[T Translatable] struct {
-	German  *T `yaml:"de,omitempty"`
+	Chinese *T `yaml:"zh,omitempty"`
 	English *T `yaml:"en,omitempty"`
 }
 
@@ -233,7 +233,7 @@ func validateExtensionConfig(config *Config) error {
 		return fmt.Errorf("store.info.tags.en can contain maximal 5 items")
 	}
 
-	if config.Store.Tags.German != nil && len(*config.Store.Tags.German) > 5 {
+	if config.Store.Tags.Chinese != nil && len(*config.Store.Tags.Chinese) > 5 {
 		return fmt.Errorf("store.info.tags.de can contain maximal 5 items")
 	}
 
@@ -241,7 +241,7 @@ func validateExtensionConfig(config *Config) error {
 		return fmt.Errorf("store.info.videos.en can contain maximal 2 items")
 	}
 
-	if config.Store.Videos.German != nil && len(*config.Store.Videos.German) > 2 {
+	if config.Store.Videos.Chinese != nil && len(*config.Store.Videos.Chinese) > 2 {
 		return fmt.Errorf("store.info.videos.de can contain maximal 2 items")
 	}
 
